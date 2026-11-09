@@ -1,0 +1,27 @@
+name: clippy-proof
+on: [push, workflow_dispatch]
+jobs:
+  proof:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - name: BEFORE - unpatched macro from master
+        run: |
+          git checkout origin/master -- macros/src/query.rs
+          cd proof
+          cargo clippy 2>&1 | tee /tmp/before.txt || true
+          echo "BEFORE_COUNT=$(grep -c 'redundant field name' /tmp/before.txt || true)"
+      - name: AFTER - patched macro
+        run: |
+          git checkout HEAD -- macros/src/query.rs
+          cd proof
+          touch src/lib.rs
+          cargo clippy 2>&1 | tee /tmp/after.txt || true
+          echo "AFTER_COUNT=$(grep -c 'redundant field name' /tmp/after.txt || true)"
+      - name: hecs own test suite with patched macro
+        run: cargo test -p hecs --features macros 2>&1 | tail -25

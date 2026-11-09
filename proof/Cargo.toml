@@ -1,0 +1,10 @@
+[package]
+name = "clippy-proof"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+hecs = { path = "..", features = ["macros"] }
+
+[workspace]
